@@ -1,2 +1,8 @@
+
 # ZhiyunClassroomAssistant
 A project which is used to download videos from classroom.zju.edu.cn and change them to audios\transcripts.
+
+##Notifications
+1.You need to download Neat Download Manager and ffmpeg(if use mp4->mp3)
+2.Use msedge
+3.NDM Settings:Ensure download directory is what you write in this application(...\study_data\Videos) and close show download completion dialog,suggest max conntections per download)
