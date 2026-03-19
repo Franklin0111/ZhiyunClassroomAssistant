@@ -13,26 +13,39 @@ from pathlib import Path
 from playwright.sync_api import Error, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 
-# ================= Main(Classroom) 配置 =================
-NDM_PATH = r"D:\Neat Download Manager\NeatDM.exe"
-FFMPEG_PATH = r"D:\ffmpeg\bin\ffmpeg.exe"
-BOT_DATA = os.path.join(os.getcwd(), "zju_bot_data")
-EDGE_EXE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+# ================= 获取程序真实运行目录 =================
+# 核心：判断是直接运行的 py 脚本，还是被打包后的 exe
+if getattr(sys, 'frozen', False):
+    BASE_PATH = os.path.dirname(sys.executable)
+else:
+    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-BASE_DIR = os.path.join(os.getcwd(), "study_data")
+# ================= 文件夹与工具路径配置 =================
+# 统一在 exe 旁边创建一个 config 文件夹存放配置和登录态
+CONFIG_DIR = os.path.join(BASE_PATH, "config")
+os.makedirs(CONFIG_DIR, exist_ok=True)
+
+# 默认去 exe 旁边的 tools 文件夹里找下载器和转码工具（免去用户自己配置的麻烦）
+NDM_PATH = os.path.join(BASE_PATH, "tools", "NeatDM.exe")
+FFMPEG_PATH = os.path.join(BASE_PATH, "tools", "ffmpeg.exe")
+
+# 数据存放目录，也固定在 exe 旁边
+BOT_DATA = os.path.join(BASE_PATH, "zju_bot_data")
+BASE_DIR = os.path.join(BASE_PATH, "study_data")
 VIDEO_DIR = os.path.join(BASE_DIR, "Videos")
 AUDIO_DIR = os.path.join(BASE_DIR, "Audios")
 TRANSCRIPT_DIR = os.path.join(BASE_DIR, "Transcripts")
 
-
 # ================= Tingwu 配置 =================
 DEFAULT_URL = "https://tingwu.aliyun.com/"
 DEFAULT_FOLDERS_URL = "https://tingwu.aliyun.com/folders/0"
-DEFAULT_STATE_PATH = Path(".auth/tingwu_storage_state.json")
 DEFAULT_BROWSER = "msedge"
-DEBUG_SCREENSHOT_PATH = Path(".auth/tingwu_transcribe_debug.png")
-COURSE_HISTORY_PATH = Path(".auth/classroom_course_history.json")
-APP_CONFIG_PATH = Path(".auth/app_config.json")
+
+# 将原来隐藏的 .auth 里的文件，全部转移到明面的 config 文件夹下
+DEFAULT_STATE_PATH = Path(os.path.join(CONFIG_DIR, "tingwu_storage_state.json"))
+DEBUG_SCREENSHOT_PATH = Path(os.path.join(CONFIG_DIR, "tingwu_transcribe_debug.png"))
+COURSE_HISTORY_PATH = Path(os.path.join(CONFIG_DIR, "classroom_course_history.json"))
+APP_CONFIG_PATH = Path(os.path.join(CONFIG_DIR, "app_config.json"))
 
 DEFAULT_EXPORT_ACTION_RETRY_SECONDS = 3
 DEFAULT_SUBMIT_CONFIRM_SECONDS = 15
@@ -440,7 +453,7 @@ def move_file_to_dir(source: Path, target_dir: Path) -> Path:
 def launch_classroom_context(playwright, is_headless: bool):
     return playwright.chromium.launch_persistent_context(
         user_data_dir=BOT_DATA,
-        executable_path=EDGE_EXE,
+        channel="msedge",
         headless=is_headless,
         args=["--remote-debugging-port=9222"],
     )
